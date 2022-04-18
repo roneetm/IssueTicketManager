@@ -5,11 +5,11 @@ import com.roneet.ticketmanager.entity.User;
 import com.roneet.ticketmanager.repository.TicketInterface;
 import com.roneet.ticketmanager.repository.UserInterface;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TicketService {
@@ -20,43 +20,74 @@ public class TicketService {
     @Autowired
     UserInterface userInterface;
 
-
+    //Creating new Ticket
     public Tickets createTicket(Tickets tickets) {
         return ticketInterface.save(tickets);
     }
 
-    public List<Tickets> ticketList() {
-        return ticketInterface.findAll();
+    // Getting list of tickets
+    public ResponseEntity<List<Tickets>> ticketList() {
+        return new ResponseEntity<>(ticketInterface.findAll(), HttpStatus.OK);
     }
 
-    public User assignUser(Long ticketId, User users) {
+    // Assigning a user to an OPEN ticket
+    public ResponseEntity<?> assignUser(Long ticketId, List<User> users) {
 
-        return ticketInterface.findById(ticketId).map(
-                tickets -> {
-                    users.setTicketsId(tickets);
-                    return userInterface.save(users);
-                }
-        ).orElseThrow(() -> new RuntimeException("No ticket found"));
+        Tickets updateTicket = ticketInterface.findById(ticketId).get();
+        updateTicket.setAssignedTo(users);
+        return ResponseEntity.ok("̈User Assigned Successfully");
     }
 
+    // Editing a ticket
     public Tickets editTicket(Long ticketId, Tickets tickets) {
-
         return ticketInterface.save(tickets);
     }
 
-    public ResponseEntity<String> deleteTicket(Long ticketId) {
-        if(ticketInterface.existsById(ticketId)){
+    // Deleting a ticket.
+    public ResponseEntity<?> deleteTicket(Long ticketId) {
+        if (ticketInterface.existsById(ticketId)) {
             ticketInterface.deleteById(ticketId);
             return ResponseEntity.ok("Deleted Successfully");
         }
-        return ResponseEntity.ok("Ticket not found");
+        return new ResponseEntity<>("Ticket with  id " + ticketId + " not found", HttpStatus.NOT_FOUND);
     }
 
-    public Optional<Tickets> getSingleTicket(Long ticketId) throws Exception {
-        if(ticketInterface.existsById(ticketId)){
-          return ticketInterface.findById(ticketId);
-        } else{
-            throw new Exception("No tickets found");
-        }
+    // Fetching a single ticket
+    public ResponseEntity<?> getSingleTicket(Long ticketId) throws Exception {
+        if (ticketInterface.existsById(ticketId))
+            return ResponseEntity.ok(ticketInterface.findById(ticketId));
+        return new ResponseEntity<>("No such tickets found", HttpStatus.BAD_REQUEST);
+    }
+
+    // Changing status of a ticket.
+    public ResponseEntity<?> changeStatus(Long ticketId, Tickets status) {
+
+        if (!ticketInterface.existsById(ticketId))
+            return new ResponseEntity<>("Ticket Id Not Found", HttpStatus.NOT_FOUND);
+
+        ticketInterface.findById(ticketId).map(
+                tickets -> {
+                    tickets.setTicketStatus(status.getTicketStatus());
+                    ticketInterface.save(tickets);
+                    return ResponseEntity.ok(status);
+                }
+        );
+        return ResponseEntity.ok("Status Changed Successfully");
+    }
+
+
+    // Change Ticket Priority to LOW, MEDIUM or HIGH
+    public ResponseEntity<?> changePriority(Long ticketId, Tickets ticketPriority) {
+
+        if (!ticketInterface.existsById(ticketId))
+            return new ResponseEntity<>("Ticket Id Not Found", HttpStatus.NOT_FOUND);
+
+        ticketInterface.findById(ticketId).map(
+                tickets -> {
+                    tickets.setTicketPriority(ticketPriority.getTicketPriority());
+                    return ResponseEntity.ok(ticketInterface.save(tickets));
+                }
+        );
+        return ResponseEntity.ok("Priority Changed Successfully");
     }
 }
