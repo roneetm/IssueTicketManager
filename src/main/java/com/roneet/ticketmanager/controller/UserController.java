@@ -24,4 +24,8 @@ public class UserController {
         return userService.getAllUsers();
     }
 
+    @PutMapping("{userId}")
+    public User editUser(@RequestBody User user ){
+       return userService.editUser(user);
+    }
 }

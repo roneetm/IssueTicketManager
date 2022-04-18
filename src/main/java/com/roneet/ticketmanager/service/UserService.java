@@ -20,4 +20,8 @@ public class UserService {
     public List<User> getAllUsers() {
         return userInterface.findAll();
     }
+
+    public User editUser(User user) {
+      return userInterface.save(user);
+    }
 }
