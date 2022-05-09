@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import sun.security.krb5.internal.Ticket;
 
 import java.util.List;
 
@@ -38,7 +37,7 @@ public class TicketControllerImpl {
         return ResponseEntity.ok(ticketService.getSingleTicket(ticketId));
     }
 
-    @PatchMapping("/{ticketId}/assign-user")
+    @PutMapping("/{ticketId}/assign-users")
     public ResponseEntity<?> assignUser(@PathVariable("ticketId") Long ticketId, @RequestBody List<User> users ){
         return ticketService.assignUser(ticketId, users);
     }
