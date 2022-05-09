@@ -1,8 +1,8 @@
 package com.roneet.ticketmanager.service;
 
 import com.roneet.ticketmanager.entity.Comment;
-import com.roneet.ticketmanager.repository.CommentInterface;
-import com.roneet.ticketmanager.repository.TicketInterface;
+import com.roneet.ticketmanager.dao.CommentInterface;
+import com.roneet.ticketmanager.dao.TicketInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

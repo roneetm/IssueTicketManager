@@ -1,5 +1,6 @@
 package com.roneet.ticketmanager.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.roneet.ticketmanager.entity.ticketenums.Priority;
 import com.roneet.ticketmanager.entity.ticketenums.Status;
 import lombok.AllArgsConstructor;

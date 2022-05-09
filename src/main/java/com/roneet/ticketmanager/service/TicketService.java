@@ -2,13 +2,14 @@ package com.roneet.ticketmanager.service;
 
 import com.roneet.ticketmanager.entity.Tickets;
 import com.roneet.ticketmanager.entity.User;
-import com.roneet.ticketmanager.repository.TicketInterface;
-import com.roneet.ticketmanager.repository.UserInterface;
+import com.roneet.ticketmanager.dao.TicketInterface;
+import com.roneet.ticketmanager.dao.UserInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -34,8 +35,25 @@ public class TicketService {
     public ResponseEntity<?> assignUser(Long ticketId, List<User> users) {
 
         Tickets updateTicket = ticketInterface.findById(ticketId).get();
-        updateTicket.setAssignedTo(users);
-        return ResponseEntity.ok("̈User Assigned Successfully");
+        List<User> validatedUserList = new ArrayList<>();
+        for (User user: users) {
+            try{
+                if(userInterface.existsById(user.getUserId())){
+                    User userObj = userInterface.getById(user.getUserId());
+                    userObj.setTicketsId(updateTicket);
+                    userInterface.save(userObj);
+                }
+                else {
+                    throw new RuntimeException("User with id "+ user.getUserId() + " does not exist");
+                }
+//                 validatedUserList.add(userInterface.findById(user.getUserId()).get());
+            } catch (RuntimeException runtimeException){
+                throw new RuntimeException("User with id "+ user.getUserId() + " does not exist");
+            }
+        }
+//        updateTicket.setAssignedTo(validatedUserList);
+//        return ResponseEntity.ok(ticketInterface.save(updateTicket));
+        return ResponseEntity.ok("Updated Successfully");
     }
 
     // Editing a ticket

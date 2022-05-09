@@ -1,4 +1,4 @@
-package com.roneet.ticketmanager.repository;
+package com.roneet.ticketmanager.dao;
 
 import com.roneet.ticketmanager.entity.Tickets;
 import org.springframework.data.jpa.repository.JpaRepository;
