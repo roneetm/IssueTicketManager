@@ -1,6 +1,5 @@
 package com.roneet.ticketmanager.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.roneet.ticketmanager.entity.ticketenums.Priority;
 import com.roneet.ticketmanager.entity.ticketenums.Status;
 import lombok.AllArgsConstructor;
@@ -10,8 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Data
@@ -20,7 +18,7 @@ import java.util.List;
 public class Tickets {
 
     @Id
-    @GeneratedValue (strategy = GenerationType.AUTO)
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long ticketId;
 
     @NotBlank
@@ -35,9 +33,14 @@ public class Tickets {
     @CreationTimestamp
     private Date createdDate;
 
-    @OneToMany(mappedBy = "ticketsId", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<User> assignedTo;
+    @ManyToMany // A Ticket can be assigned to multiple users
+    private Set<User> assignedTo = new HashSet<>();
 
-    @OneToMany (mappedBy = "ticketsId", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Comment> comments;
+//    @OneToMany(cascade = CascadeType.ALL)
+//    @JoinTable(name = "ticket_comments", joinColumns = @JoinColumn(name = "ticketId"),
+//            inverseJoinColumns = @JoinColumn(name = "commentId"))
+//    private List<Comment> comments;
+//
+    @ManyToMany
+    private Set<User> usersWatching = new HashSet<>();
 }

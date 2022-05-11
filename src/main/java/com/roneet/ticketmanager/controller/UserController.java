@@ -25,7 +25,7 @@ public class UserController {
     }
 
     @PutMapping("{userId}")
-    public User editUser(@RequestBody User user ){
-       return userService.editUser(user);
+    public User editUser(@PathVariable("userId") Long userId, @RequestBody User user ){
+       return userService.editUser(userId, user);
     }
 }

@@ -21,7 +21,13 @@ public class UserService {
         return userInterface.findAll();
     }
 
-    public User editUser(User user) {
-      return userInterface.save(user);
+    public User editUser(Long userId, User user) {
+
+      userInterface.findById(userId).map(user1 -> {
+         user1.setFirstName(user.getFirstName());
+         user1.setLastName(user.getLastName());
+          return userInterface.save(user1);
+      });
+      return null;
     }
 }

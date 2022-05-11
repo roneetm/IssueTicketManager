@@ -18,10 +18,6 @@ public class Comment {
     private String comment;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "ticket_id", referencedColumnName = "ticketId")
-    @JsonIgnore
     private Tickets ticketsId;
 
-    public Comment(Comment comment) {
-    }
 }

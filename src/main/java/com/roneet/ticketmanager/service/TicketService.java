@@ -4,13 +4,15 @@ import com.roneet.ticketmanager.entity.Tickets;
 import com.roneet.ticketmanager.entity.User;
 import com.roneet.ticketmanager.dao.TicketInterface;
 import com.roneet.ticketmanager.dao.UserInterface;
+import com.roneet.ticketmanager.entity.ticketenums.Priority;
+import com.roneet.ticketmanager.entity.ticketenums.Status;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class TicketService {
@@ -21,8 +23,11 @@ public class TicketService {
     @Autowired
     UserInterface userInterface;
 
-    //Creating new Ticket
+    //
+    // Creating new Ticket
     public Tickets createTicket(Tickets tickets) {
+        tickets.setTicketStatus(Status.OPEN); // Setting default ticket status to OPEN
+        tickets.setTicketPriority(Priority.LOW); // // Setting default ticket priority to LOW
         return ticketInterface.save(tickets);
     }
 
@@ -35,25 +40,45 @@ public class TicketService {
     public ResponseEntity<?> assignUser(Long ticketId, List<User> users) {
 
         Tickets updateTicket = ticketInterface.findById(ticketId).get();
-        List<User> validatedUserList = new ArrayList<>();
-        for (User user: users) {
-            try{
-                if(userInterface.existsById(user.getUserId())){
-                    User userObj = userInterface.getById(user.getUserId());
-                    userObj.setTicketsId(updateTicket);
-                    userInterface.save(userObj);
-                }
-                else {
-                    throw new RuntimeException("User with id "+ user.getUserId() + " does not exist");
-                }
-//                 validatedUserList.add(userInterface.findById(user.getUserId()).get());
-            } catch (RuntimeException runtimeException){
-                throw new RuntimeException("User with id "+ user.getUserId() + " does not exist");
+
+        if (users != null) {
+            Set<User> validatedUserList = updateTicket.getAssignedTo();
+            for (User user : users) {
+                User userObj = userInterface.findById(user.getUserId()).get();
+                validatedUserList.add(userObj);
+            }
+            if (validatedUserList != null) {
+                updateTicket.setAssignedTo(validatedUserList);
+                ticketInterface.save(updateTicket);
+                return ResponseEntity.ok("Users Assigned to ticket " + ticketId + " Successfully");
             }
         }
-//        updateTicket.setAssignedTo(validatedUserList);
-//        return ResponseEntity.ok(ticketInterface.save(updateTicket));
-        return ResponseEntity.ok("Updated Successfully");
+        return new ResponseEntity<>("Users not assigned to ticket: " + ticketId, HttpStatus.BAD_REQUEST);
+    }
+
+    // Removing user from an assigned tickets
+    public ResponseEntity<?> removeAssignedUser(Long ticketId, List<User> users) {
+
+        Tickets updateTicket;
+        if (ticketInterface.existsById(ticketId)) {
+            updateTicket = ticketInterface.findById(ticketId).get();
+        } else {
+            return new ResponseEntity<>("Ticket with Id " + ticketId + " Not Found", HttpStatus.NOT_FOUND);
+        }
+
+        if (users != null) {
+            Set<User> validatedUserList = updateTicket.getAssignedTo();
+            for (User user : users) {
+                User userObj = userInterface.findById(user.getUserId()).get();
+                validatedUserList.remove(userObj);
+            }
+            if (validatedUserList != null) {
+                updateTicket.setAssignedTo(validatedUserList);
+                ticketInterface.save(updateTicket);
+                return ResponseEntity.ok("Users Removed from the ticket " + ticketId + " Successfully");
+            }
+        }
+        return new ResponseEntity<>("Users not removed from the ticket: " + ticketId, HttpStatus.BAD_REQUEST);
     }
 
     // Editing a ticket
@@ -93,7 +118,6 @@ public class TicketService {
         return ResponseEntity.ok("Status Changed Successfully");
     }
 
-
     // Change Ticket Priority to LOW, MEDIUM or HIGH
     public ResponseEntity<?> changePriority(Long ticketId, Tickets ticketPriority) {
 
@@ -107,5 +131,47 @@ public class TicketService {
                 }
         );
         return ResponseEntity.ok("Priority Changed Successfully");
+    }
+
+    // Assigning user to a ticket watchlist
+    public ResponseEntity<?> addToWatch(Long ticketId, User user) {
+
+        Tickets tickets;
+        if (ticketInterface.existsById(ticketId)) {
+            tickets = ticketInterface.findById(ticketId).get();
+        } else {
+            return new ResponseEntity<>("Ticket with Id " + ticketId + " Not Found", HttpStatus.NOT_FOUND);
+        }
+
+        if (userInterface.existsById(user.getUserId())) {
+            Set<User> userSet = tickets.getUsersWatching();
+            userSet.add(userInterface.findById(user.getUserId()).get());
+            tickets.setUsersWatching(userSet);
+            ticketInterface.save(tickets);
+
+            return new ResponseEntity<>("User Added to Watch List ", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("User Id " + user.getUserId() + " Not Found", HttpStatus.NOT_FOUND);
+        }
+    }
+
+    public ResponseEntity<?> removeFromWatch(Long ticketId, User user) {
+        Tickets tickets;
+        if (ticketInterface.existsById(ticketId)) {
+            tickets = ticketInterface.findById(ticketId).get();
+        } else {
+            return new ResponseEntity<>("Ticket with Id " + ticketId + " Not Found", HttpStatus.NOT_FOUND);
+        }
+
+        if (userInterface.existsById(user.getUserId())) {
+            Set<User> userSet = tickets.getUsersWatching();
+            userSet.remove(userInterface.findById(user.getUserId()).get());
+            tickets.setUsersWatching(userSet);
+            ticketInterface.save(tickets);
+
+            return new ResponseEntity<>("User Removed from Watch List ", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("User Id " + user.getUserId() + " Not Found", HttpStatus.NOT_FOUND);
+        }
     }
 }
